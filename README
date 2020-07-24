@@ -1,0 +1,22 @@
+Thank you for taking the time to test this.  Please note that this was rushed due to time constraints and having to get it to work in an easy fashion when handing off to a complete stranger and there are some additional things I would do in a production environment if I could control the infrastructure as well as had a bit more time.  They are listed below as well as my general thoughts on Phase 2 items I would have liked to do / would have done in a real world scenario if this were live.
+
+1. Unit Testing - I know it's bad form to not include some basic unit tests but be aware that I know they should be done in a real world scenario and in a case where I had more than 8 hours to create something.
+
+2. Authentication - The test code problem didn't discuss a multi-tenet architecture but I would assume that such a system would be the norm in the real world, so there would definitely need to be authentication added in a phase 2.  Be it JWT or OAUTH2.  Epecially given the quick and dirty method of handling csv uploads to prevent being able to read other companies' files and such which leads me to:
+
+3. Handling of file uploads.  I know the existing method is not ideal but I didn't have the time/infrastructure to set up a more realistic architecture using either Celery with SQS to handle automated processing of uploaded files or to add in realistic checks and balances (preventing multiple processing of the same file, requiring a secondary call to process a file, etc.) but a sample architecture might look like:
+
+	A) ingestion of csv files through the api which would write to s3 buckets. possibly being handled in Lambdas.  The lambda would complete the upload and then write to SQS with the relevant info and location of the csv.  An SQS trigger would then be fired off to handle a secondary lambda which could then process the file and update it.
+
+	B) A full implementation of the skeletal call back system I was building here.  Customers would upload their CSV with 5 million records and so forth and get a callback url to check the status.  They could then ping that in any interval they required and it would be updated with the process from the lambdas and a final result once completed.
+
+	C) Using the above method it eliminates overwriting, manual forcing of processing, and add scalability that this test implementation does not.
+
+
+4. Phone number handling is pretty crude. It's just taking it in. I did find a module that emulates the google libphonenumber library but didn't have time to implement it in phase 1.  This would allow for multiple formats as well as internation phone numbers as well.
+
+5. I will freely admit the file upload feature took me a while to implement as it's been a little while since I used django/python so there were definite cobwebs.  I've been stuck in PHP/Laravel purgatory for the last few years so there was an adjustment.
+
+6. There are probably a few unneeded imports in views especially as I was trying different methods for csv parsing and file uploads that may incur more overhead than I would like and would be removed in a phase 2 once I got unit testing in place.
+
+
