@@ -6,8 +6,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.settings import api_settings
-from rest_framework_csv.parsers import CSVParser
-from rest_framework_csv.renderers import CSVRenderer
 from rest_framework import viewsets, status
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
