@@ -99,34 +99,6 @@ class MemberByClient(APIView):
         serializer = MemberSerializer(members, many=True)
         return Response(serializer.data)
 
-class ProcessCSV (viewsets.ModelViewSet):
-
-    queryset = Member.objects.all()
-    parser_classes = (CSVParser,) + tuple(api_settings.DEFAULT_PARSER_CLASSES)
-    renderer_classes = (CSVRenderer,) + tuple(api_settings.DEFAULT_RENDERER_CLASSES)
-    serializer_class = MemberSerializer
-
-    def get_renderer_context(self):
-        context = super(ProcessCSV, self).get_renderer_context()
-        context['header'] = (
-            self.request.GET['fields'].split(',')
-            if 'fields' in self.request.GET else None)
-        return context
-
-    def bulk_upload(self, request, *args, **kwargs):
-        """
-        Try out this view with the following curl command:
-        curl -X POST http://localhost:8000/talks/bulk_upload/ \
-            -d "speaker,topic,scheduled_at
-                Ana Balica,Testing,2016-11-03T15:15:00+01:00
-                Aymeric Augustin,Debugging,2016-11-03T16:15:00+01:00" \
-            -H "Content-type: text/csv" \
-            -H "Accept: text/csv"
-        """
-        serializer = MemberSerializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data,status=status.HTTP_201_CREATED)
 
 class FileUploadView(APIView):
     """
@@ -161,6 +133,9 @@ class ProcessFile(APIView):
             "Could not open/read file:", fname
             sys.exit()
 
+        goodcount = 0
+        badcount = 0
+
         with f as read_obj:
             csv_dict_reader = DictReader(f)
             header = next(csv_dict_reader)
@@ -172,14 +147,14 @@ class ProcessFile(APIView):
                     serializer = MemberSerializer(data=row)
         # if valid, great
                     if serializer.is_valid():
-                        print("Good")
                         serializer.save()
+                        goodcount += 1
         #    serializer.save()
                     else:
-                        print("Bad")
+                        # if invalid, bad, flag it, and continue
+                        badcount += 1
 
-        # if invalid, bad, flag it, and continue
 
 
         # return link to processed file
-        return Response(u'/media/' + filename)
+        return Response(u'Good:' + str(goodcount) + ' Bad: ' + str(badcount))
